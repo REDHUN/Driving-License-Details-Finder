@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51324241117",
+    "project_id": "driving-license-details-acb09",
+    "storage_bucket": "driving-license-details-acb09.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51324241117:android:3564eda7b3319cb7e34734",
+        "android_client_info": {
+          "package_name": "com.example.drivinglicensedetails"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsza2mv_Q2SgivMBVZYI-420jpIHHWA-E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
