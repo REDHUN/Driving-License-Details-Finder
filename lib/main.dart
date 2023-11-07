@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:drivinglicensedetails/screens/userdetailsscreen.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_web_qrcode_scanner/flutter_web_qrcode_scanner.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,14 +41,34 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> scanQr() async {
     try {
-      FlutterBarcodeScanner.scanBarcode('#2A99CF', 'cancel', true, ScanMode.QR)
-          .then((value) {
-        setState(() {
-          searchName = value;
-          qrcontroller = TextEditingController(text: value);
-        });
-      });
-    } catch (e) {
+      FlutterWebQrcodeScanner(
+        onGetResult: (result) {
+          setState(() {
+            searchName = result;
+          });
+        },
+        stopOnFirstResult: true,
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.8,
+        onError: (error) {
+          // print(error.message)
+        },
+        onPermissionDeniedError: () {
+          //show alert dialog or something
+        },
+      );
+    }
+
+    //   FlutterBarcodeScanner.scanBarcode('#2A99CF', 'cancel', true, ScanMode.QR)
+    //       .then((value) {
+    //     setState(() {
+    //       searchName = value;
+    //       qrcontroller = TextEditingController(text: value);
+    //     });
+    //   });
+    // }
+
+    catch (e) {
       setState(() {
         searchName = "unable to read qr code";
       });
@@ -54,63 +76,52 @@ class _MyAppState extends State<MyApp> {
   }
 
   void exportData() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(allowMultiple: false);
-    //if no file is picked
-    if (result == null) return;
-    print(result.files.first.name);
-    filePath = result.files.first.path!;
-    final input = File(filePath!).openRead();
-    final fields = await input
-        .transform(utf8.decoder)
-        .transform(const CsvToListConverter())
-        .toList();
-    //  FirebaseFirestore.instance
-    // .collection("eventDetails")
-    // .where("chapterNumber", isEqualTo : "121 ")
-    // .get().then((value){
-    //   value.docs.forEach((element) {
-    //    FirebaseFirestore.instance.collection("eventDetails").doc(element.id).delete().then((value){
-    //      print("Success!");
-    //    });
-    //   });
-    // });
+    //Pick file
+    FilePickerResult? csvFile = await FilePicker.platform.pickFiles(
+        allowedExtensions: ['csv'],
+        type: FileType.custom,
+        allowMultiple: false);
+    if (csvFile != null) {
+      //decode bytes back to utf8
+      final bytes = utf8.decode(csvFile.files[0].bytes as List<int>);
+      List<List<dynamic>> fields =
+          const CsvToListConverter().convert(bytes).toList();
+      final CollectionReference contacts =
+          FirebaseFirestore.instance.collection("contacts");
+      // final myData = await rootBundle.loadString(input as String);
+      //List<List<dynamic>> csvTable = CsvToListConverter().convert(myData);
 
-    final CollectionReference contacts =
-        FirebaseFirestore.instance.collection("contacts");
-    // final myData = await rootBundle.loadString(input as String);
-    //List<List<dynamic>> csvTable = CsvToListConverter().convert(myData);
-    List<List<dynamic>> data = [];
-    data = fields;
-    for (var i = 0; i < data.length; i++) {
-      var record = {
-        "Name": data[i][0],
-        "Employee Code": data[i][1].toString(),
-        "PHONE NO": data[i][2].toString(),
-        "Two License Number": data[i][3].toString(),
-        "Two Vaild From": data[i][4].toString(),
-        "Two Vaild To": data[i][5].toString(),
-        "Three License Number": data[i][6].toString(),
-        "Three Vaild From": data[i][7].toString(),
-        "Three Vaild To": data[i][8].toString(),
-        "Four License Number": data[i][9].toString(),
-        "Four Vaild From": data[i][10].toString(),
-        "Four Vaild To": data[i][11].toString(),
-        "Fortlift License Number": data[i][12].toString(),
-        "Fortlift Vaild From": data[i][13].toString(),
-        "Fortlift Vaild To": data[i][14].toString(),
-        "Mewp License Number": data[i][15].toString(),
-        "Mewp Vaild From": data[i][16].toString(),
-        "Mewp Vaild To": data[i][17].toString(),
-      };
-      contacts.add(record).then((value) => SnackBar(
-            content: const Text('Uploading!'),
-            backgroundColor: (Colors.black12),
-            action: SnackBarAction(
-              label: 'dismiss',
-              onPressed: () {},
-            ),
-          ));
+      for (int i = 0; i < fields.length; i++) {
+//inside the 2nd dimension
+        for (int j = 0; j < fields.elementAt(i).length; j++) {}
+      }
+
+      List<List<dynamic>> data = [];
+      data = fields;
+
+      for (var i = 0; i < data.length; i++) {
+        var record = {
+          "Name": data[i][0],
+          "Employee Code": data[i][1].toString(),
+          "PHONE NO": data[i][2].toString(),
+          "Two License Number": data[i][3].toString(),
+          "Two Vaild From": data[i][4].toString(),
+          "Two Vaild To": data[i][5].toString(),
+          "Three License Number": data[i][6].toString(),
+          "Three Vaild From": data[i][7].toString(),
+          "Three Vaild To": data[i][8].toString(),
+          "Four License Number": data[i][9].toString(),
+          "Four Vaild From": data[i][10].toString(),
+          "Four Vaild To": data[i][11].toString(),
+          "Fortlift License Number": data[i][12].toString(),
+          "Fortlift Vaild From": data[i][13].toString(),
+          "Fortlift Vaild To": data[i][14].toString(),
+          "Mewp License Number": data[i][15].toString(),
+          "Mewp Vaild From": data[i][16].toString(),
+          "Mewp Vaild To": data[i][17].toString(),
+        };
+        contacts.add(record);
+      }
     }
   }
 
